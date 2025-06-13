@@ -1,0 +1,90 @@
+name: Claude Code
+on:
+    issue_comment:
+        types: [created]
+    pull_request_review_comment:
+        types: [created]
+    issues:
+        types: [opened, assigned]
+    pull_request:
+        types: [opened, edited]
+    pull_request_review:
+        types: [submitted]
+
+# 並行実行を3つに制限（GitHub-hostedに適応）
+concurrency:
+  group: claude-execution-pool-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+    claude:
+        if: |
+            (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+            (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+            (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+            (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
+            (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claude'))
+            
+        runs-on: ubuntu-latest  # GitHub-hosted runnerを使用
+        
+        permissions:
+            contents: write
+            pull-requests: write
+            issues: write
+            id-token: write
+            
+        timeout-minutes: 30  # GitHub-hostedの制限に合わせて短縮
+        
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+                  clean: true
+
+            - name: Run Claude Code
+              id: claude
+              uses: antamoco/claude-code-action@main  # あなたのフォーク版を使用
+              with:
+                  model: 'claude-sonnet-4-20250514'
+                  # MCPツールでIssue作成・PR作成を可能にする
+                  allowed_tools: 'mcp__github_file_ops__create_issue,mcp__github_file_ops__update_issue_comment,mcp__github_file_ops__create_pull_request,mcp__github_file_ops__list_issues,mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read,Write,Edit,Glob,Grep'
+                  use_oauth: 'true'
+                  claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+                  claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+                  claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+                  custom_instructions: |
+                    必ず日本語で回答してください。
+                    コメント、説明、エラーメッセージもすべて日本語にしてください。
+                    コードのコメントも日本語で書いてください。
+                    
+                    ## 🤖 自動開発ワークフロー対応
+                    - MCPツールを使用してIssue作成・PR作成を実行
+                    - @claudeメンション時は自動開発ワークフローを継承
+                    - Issue作成後は即座に実装開始
+                    - 実装完了後はPR作成とレビュー依頼
+              timeout-minutes: 25
+
+            # 1回リトライ（GitHub-hosted環境用）
+            - name: Run Claude Code (Retry)
+              if: steps.claude.outcome == 'failure'
+              id: claude-retry
+              uses: antamoco/claude-code-action@main
+              with:
+                model: 'claude-sonnet-4-20250514'
+                allowed_tools: 'mcp__github_file_ops__create_issue,mcp__github_file_ops__update_issue_comment,mcp__github_file_ops__create_pull_request,mcp__github_file_ops__list_issues,mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read,Write,Edit,Glob,Grep'
+                use_oauth: 'true'
+                claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+                claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+                claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+                custom_instructions: |
+                  必ず日本語で回答してください。
+                  コメント、説明、エラーメッセージもすべて日本語にしてください。
+                  コードのコメントも日本語で書いてください。
+                  
+                  ## 🤖 自動開発ワークフロー対応
+                  - MCPツールを使用してIssue作成・PR作成を実行
+                  - @claudeメンション時は自動開発ワークフローを継承
+                  - Issue作成後は即座に実装開始
+                  - 実装完了後はPR作成とレビュー依頼
+              timeout-minutes: 25
