@@ -529,9 +529,10 @@ export class FiveChScraper {
       return filteredThreads
     } catch (error) {
       console.error(`=== ERROR scraping board ${board}:`, error instanceof Error ? error.message : String(error))
-      if (error.response) {
-        console.error(`Response status: ${error.response.status}`)
-        console.error(`Response headers:`, error.response.headers)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any
+        console.error(`Response status: ${axiosError.response?.status}`)
+        console.error(`Response headers:`, axiosError.response?.headers)
       }
       return []
     }
