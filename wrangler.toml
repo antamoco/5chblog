@@ -6,28 +6,10 @@ pages_build_output_dir = ".vercel/output/static"
 
 # Node.js compatibility for Edge Runtime
 [env.production]
-vars = { 
-  NODE_ENV = "production",
-  NEXT_PUBLIC_SUPABASE_URL = "",
-  NEXT_PUBLIC_SUPABASE_ANON_KEY = "",
-  SUPABASE_SERVICE_ROLE_KEY = "",
-  NEXTAUTH_URL = "",
-  NEXTAUTH_SECRET = "",
-  ADMIN_EMAIL = "",
-  ADMIN_PASSWORD = ""
-}
+vars = { NODE_ENV = "production" }
 
 [env.preview]
-vars = { 
-  NODE_ENV = "development",
-  NEXT_PUBLIC_SUPABASE_URL = "",
-  NEXT_PUBLIC_SUPABASE_ANON_KEY = "",
-  SUPABASE_SERVICE_ROLE_KEY = "",
-  NEXTAUTH_URL = "",
-  NEXTAUTH_SECRET = "",
-  ADMIN_EMAIL = "",
-  ADMIN_PASSWORD = ""
-}
+vars = { NODE_ENV = "development" }
 
 # Environment variables that need to be set in Cloudflare Pages dashboard:
 # SUPABASE_URL=your_supabase_project_url
