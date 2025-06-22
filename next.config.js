@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Cloudflare Pages対応: 静的エクスポート
+  output: 'export',
+  trailingSlash: true,
   // Cloudflare Pages対応: キャッシュ無効化
   webpack: (config, { isServer }) => {
     if (isServer) {
