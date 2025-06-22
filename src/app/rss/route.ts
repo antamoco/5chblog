@@ -19,7 +19,7 @@ export async function GET() {
       .limit(20)
 
     if (error) {
-      console.error('RSS fetch error:', error)
+      console.error('RSS fetch error:', error instanceof Error ? error.message : String(error))
       return new NextResponse('Internal Server Error', { status: 500 })
     }
 
@@ -53,7 +53,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('RSS generation error:', error)
+    console.error('RSS generation error:', error instanceof Error ? error.message : String(error))
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 }

@@ -622,7 +622,7 @@ export class FiveChScraper {
 
       return allPosts.sort((a, b) => a.post_number - b.post_number)
     } catch (error) {
-      console.error(`Error scraping thread posts:`, error)
+      console.error(`Error scraping thread posts:`, error instanceof Error ? error.message : String(error))
       return []
     }
   }
