@@ -158,7 +158,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 // HTMLから情報を抽出
                 const postNumberMatch = postHtml.match(/data-post-number="(\d+)"/)
                 const metaMatch = postHtml.match(/<div class="post-meta">([^<]+)<\/div>/)
-                const contentMatch = postHtml.match(/<div class="post-content"([^>]*)>((?:(?!<\/div>).)*)<\/div>/s)
+                const contentMatch = postHtml.match(/<div class="post-content"([^>]*)>([\s\S]*?)<\/div>/)
                 
                 if (!metaMatch || !contentMatch) return null
                 
