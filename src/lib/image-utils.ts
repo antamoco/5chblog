@@ -136,8 +136,7 @@ export function getImageUrlType(url: string): string {
 export async function testImageUrl(url: string): Promise<boolean> {
   try {
     const response = await fetch(`/api/image-proxy?url=${encodeURIComponent(url)}&test=true`, {
-      method: 'HEAD',
-      timeout: 5000
+      method: 'HEAD'
     })
     return response.ok
   } catch {
