@@ -150,7 +150,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="p-8">
 
             <div className="prose prose-lg max-w-none">
-              {article.content.split('<div class="post-item"').filter(part => part.trim()).map((part, index) => {
+              {article.content.split('<div class="post-item"').filter((part: string) => part.trim()).map((part: string, index: number) => {
                 if (index === 0 && !part.includes('data-post-number')) return null
                 
                 const postHtml = index > 0 ? '<div class="post-item"' + part : part
