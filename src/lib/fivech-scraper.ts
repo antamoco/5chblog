@@ -94,7 +94,7 @@ export class FiveChScraper {
             break
           }
         } catch (error) {
-          console.log(`Failed to fetch from ${sourceUrl}:`, error.message)
+          console.log(`Failed to fetch from ${sourceUrl}:`, error instanceof Error ? error.message : String(error))
           continue
         }
       }
