@@ -108,7 +108,7 @@ export class FiveChScraper {
 
       return boardMap
     } catch (error) {
-      console.error('Failed to fetch board list from all sources:', error.message)
+      console.error('Failed to fetch board list from all sources:', error instanceof Error ? error.message : String(error))
       
       // キャッシュがあれば古くても使用
       if (this.boardListCache) {
@@ -219,7 +219,7 @@ export class FiveChScraper {
         // リダイレクトもなく、有効でもない場合は失敗
         return null
       } catch (error) {
-        console.log(`Error testing ${currentUrl}:`, error.message)
+        console.log(`Error testing ${currentUrl}:`, error instanceof Error ? error.message : String(error))
         return null
       }
     }
@@ -528,7 +528,7 @@ export class FiveChScraper {
       console.log(`=== Scraping completed for board: ${board}. Returning ${filteredThreads.length} threads ===`)
       return filteredThreads
     } catch (error) {
-      console.error(`=== ERROR scraping board ${board}:`, error.message)
+      console.error(`=== ERROR scraping board ${board}:`, error instanceof Error ? error.message : String(error))
       if (error.response) {
         console.error(`Response status: ${error.response.status}`)
         console.error(`Response headers:`, error.response.headers)
@@ -614,7 +614,7 @@ export class FiveChScraper {
             break
           }
         } catch (error) {
-          console.log(`Failed to fetch ${url}:`, error.message)
+          console.log(`Failed to fetch ${url}:`, error instanceof Error ? error.message : String(error))
           continue
         }
       }

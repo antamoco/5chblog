@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       console.error('Article data:', articleData)
       return NextResponse.json({ 
         error: 'データベースエラー', 
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
         code: error.code 
       }, { status: 500 })
     }

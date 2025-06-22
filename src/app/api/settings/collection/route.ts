@@ -16,7 +16,7 @@ export async function GET() {
 
     if (error) {
       // テーブルが存在しない場合はデフォルト値を返す
-      if (error.code === 'PGRST116' || error.message.includes('relation') || error.message.includes('does not exist')) {
+      if ((error as any).code === 'PGRST116' || (error instanceof Error && (error.message.includes('relation') || error.message.includes('does not exist')))) {
         return NextResponse.json({
           target_boards: ['livegalileo', 'news4vip'],
           min_post_count: 100,
