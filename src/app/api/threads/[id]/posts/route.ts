@@ -33,12 +33,49 @@ export async function GET(
       return NextResponse.json({ error: 'スレッドが見つかりません' }, { status: 404 })
     }
 
-    // TODO: スクレイピング機能は後で実装
-    // 現在はCloudflare Pages対応のため無効化
-    
+    // 認証チェック（スクレイピングには認証が必要）
+    await requireAuth(request)
+
+    // スレッドからレスを取得
+    const scraper = await import('@/lib/fivech-scraper').then(m => m.createDefaultScraper())
+    const scrapedPosts = await scraper.scrapeThreadPosts(thread.url)
+
+    if (scrapedPosts.length === 0) {
+      return NextResponse.json({ 
+        message: 'レスを取得できませんでした',
+        posts: []
+      })
+    }
+
+    // データベースに保存（既存スキーマのフィールドのみ使用）
+    const postsToInsert = scrapedPosts.map(post => ({
+      thread_id: threadId,
+      post_number: post.post_number,
+      author: post.author,
+      content: post.content,
+      posted_at: post.posted_at,
+      is_selected: false,
+    }))
+
+    const { data: insertedPosts, error } = await supabaseAdmin
+      .from('posts')
+      .insert(postsToInsert)
+      .select()
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json({ error: 'データベースエラー' }, { status: 500 })
+    }
+
+    // スレッドのpost_countを更新
+    await supabaseAdmin
+      .from('threads')
+      .update({ post_count: scrapedPosts.length })
+      .eq('id', threadId)
+
     return NextResponse.json({ 
-      posts: [],
-      message: 'スクレイピング機能は準備中です'
+      posts: insertedPosts,
+      message: `${scrapedPosts.length}件のレスを取得しました`
     })
 
   } catch (error) {
