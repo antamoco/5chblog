@@ -602,7 +602,7 @@ export class FiveChScraper {
           console.log(`Response status: ${response.status}`)
           console.log(`HTML length: ${html.length}`)
 
-          const $ = cheerio.load(html)
+          const $ = cheerio.load(html) as cheerio.CheerioAPI
           const posts = this.extractPostsFromHtml($)
           
           if (posts.length > allPosts.length) {
