@@ -1,19 +1,15 @@
 # Cloudflare Pages configuration for Next.js
 name = "5chblog"
 compatibility_date = "2024-06-21"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
 
+# Node.js compatibility for Edge Runtime
 [env.production]
-# Production environment settings
 vars = { NODE_ENV = "production" }
 
 [env.preview]
-# Preview environment settings  
 vars = { NODE_ENV = "development" }
-
-# Build configuration
-[build]
-command = "npm run build"
-destination = ".next"
 
 # Environment variables that need to be set in Cloudflare Pages dashboard:
 # SUPABASE_URL=your_supabase_project_url
@@ -22,5 +18,7 @@ destination = ".next"
 # NEXTAUTH_SECRET=your_nextauth_secret
 # NEXTAUTH_URL=your_deployed_site_url
 # NEXT_PUBLIC_SITE_URL=your_deployed_site_url
+# ADMIN_EMAIL=your_admin_email
+# ADMIN_PASSWORD=your_admin_password
 # NEXT_PUBLIC_GA_ID=your_google_analytics_id (optional)
 # NEXT_PUBLIC_ADSENSE_CLIENT_ID=your_adsense_client_id (optional)
