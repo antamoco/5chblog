@@ -1,0 +1,19 @@
+
+> 5chblog@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+  ▲ Next.js 14.2.0
+  - Local:        http://localhost:3001
+  - Environments: .env
+
+ ✓ Starting...
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'appDir' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ✓ Ready in 4.7s
+ ○ Compiling /api/articles ...
+ ✓ Compiled /api/articles in 3.5s (375 modules)
+ GET /api/articles?limit=1 200 in 7193ms
+ ✓ Compiled in 3s (198 modules)
+[?25h

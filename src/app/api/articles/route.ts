@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('category_id', category)
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       query = query.eq('status', status)
     }
 
@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
     const {
       title,
       content,
-      excerpt,
       category_id,
+      thread_id,
       status = 'draft',
       published_at,
       meta_description,
@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
       title,
       slug,
       content,
-      excerpt: excerpt || content.substring(0, 200),
       category_id,
+      thread_id: thread_id || null,
       status,
       published_at: status === 'published' ? (published_at || new Date().toISOString()) : null,
       meta_description,
@@ -118,7 +118,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json({ error: 'データベースエラー' }, { status: 500 })
+      console.error('Article data:', articleData)
+      return NextResponse.json({ 
+        error: 'データベースエラー', 
+        details: error.message,
+        code: error.code 
+      }, { status: 500 })
     }
 
     return NextResponse.json({

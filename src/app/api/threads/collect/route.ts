@@ -1,17 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { createDefaultScraper } from '@/lib/fivech-scraper'
+import { createDefaultScraper, createScraperWithSettings } from '@/lib/fivech-scraper'
 
 export async function POST(request: NextRequest) {
+  console.log('=== Thread Collection API Called ===')
   try {
     // 認証チェック
+    console.log('Checking authentication...')
     const session = await getServerSession()
+    console.log('Session:', session ? 'Found' : 'Not found')
+    
     if (!session) {
+      console.log('Authentication failed')
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
     }
+    
+    console.log('Authentication successful')
 
-    const scraper = createDefaultScraper()
+    // 収集設定を取得
+    console.log('Fetching collection settings...')
+    const { data: settings, error: settingsError } = await supabaseAdmin
+      .from('collection_settings')
+      .select('*')
+      .single()
+
+    let scraper
+    if (settingsError || !settings) {
+      console.log('Using default settings')
+      scraper = createDefaultScraper()
+    } else {
+      console.log('Using custom settings:', settings)
+      scraper = createScraperWithSettings({
+        target_boards: settings.target_boards || ['livegalileo', 'news4vip'],
+        min_post_count: settings.min_post_count || 100
+      })
+    }
     
     // スレッド収集実行
     console.log('スレッド収集を開始...')

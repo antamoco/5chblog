@@ -1,10 +1,10 @@
 import './globals.css'
-// // // import { Inter, Noto_Sans_JP } from 'next/font/google'
+// // import { Inter, Noto_Sans_JP } from 'next/font/google'
 import { Providers } from './providers'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 
-// // const inter = Inter({ subsets: ['latin'] })
-// // const notoSansJP = Noto_Sans_JP({ subsets: ['latin'] })
+// const inter = Inter({ subsets: ['latin'] })
+// const notoSansJP = Noto_Sans_JP({ subsets: ['latin'] })
 
 export const metadata = {
   title: {

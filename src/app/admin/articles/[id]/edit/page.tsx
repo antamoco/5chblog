@@ -2,7 +2,7 @@
 
 import { AdminLayout } from '@/components/AdminLayout'
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { 
   DocumentTextIcon, 
@@ -10,14 +10,12 @@ import {
   CheckIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
-import { Category, Post, Thread } from '@/types'
-import { processPostImages } from '@/lib/image-utils'
+import { Category, Article } from '@/types'
 
-export default function NewArticlePage() {
+export default function EditArticlePage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const threadId = searchParams.get('threadId')
-  const selectedPostIds = searchParams.get('selectedPosts')?.split(',') || []
+  const params = useParams()
+  const articleId = params.id as string
 
   const [formData, setFormData] = useState({
     title: '',
@@ -29,11 +27,39 @@ export default function NewArticlePage() {
   })
 
   const [categories, setCategories] = useState<Category[]>([])
-  const [thread, setThread] = useState<Thread | null>(null)
-  const [selectedPosts, setSelectedPosts] = useState<Post[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [article, setArticle] = useState<Article | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+
+  // 記事データを取得
+  const fetchArticle = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/articles/${articleId}`)
+      if (response.ok) {
+        const data = await response.json()
+        const articleData = data.article
+        setArticle(articleData)
+        setFormData({
+          title: articleData.title || '',
+          content: articleData.content || '',
+          category_id: articleData.category_id || '',
+          status: articleData.status || 'draft',
+          meta_description: articleData.meta_description || '',
+          keywords: articleData.keywords || []
+        })
+      } else {
+        toast.error('記事の取得に失敗しました')
+        router.push('/admin/articles')
+      }
+    } catch (error) {
+      toast.error('記事の取得に失敗しました')
+      router.push('/admin/articles')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // カテゴリ一覧を取得
   const fetchCategories = async () => {
@@ -51,144 +77,6 @@ export default function NewArticlePage() {
     }
   }
 
-  // スレッドと選択されたレスを取得
-  const fetchThreadData = async () => {
-    if (!threadId || selectedPostIds.length === 0) return
-
-    try {
-      setIsLoading(true)
-
-      // スレッド情報を取得
-      const threadResponse = await fetch(`/api/threads/${threadId}`)
-      if (threadResponse.ok) {
-        const threadData = await threadResponse.json()
-        setThread(threadData.thread)
-        setFormData(prev => ({
-          ...prev,
-          title: threadData.thread.title
-        }))
-      }
-
-      // 選択されたレスを取得
-      const postsResponse = await fetch(`/api/threads/${threadId}/posts`)
-      if (postsResponse.ok) {
-        const postsData = await postsResponse.json()
-        const posts = postsData.posts.filter((post: Post) => 
-          selectedPostIds.includes(post.id)
-        ).sort((a: Post, b: Post) => 
-          (a.display_order || 0) - (b.display_order || 0)
-        )
-        
-        setSelectedPosts(posts)
-        
-        // レスからコンテンツを生成（ハムスター速報スタイル）
-        const content = posts.map((post: Post) => {
-          const style = post.style_config || {}
-          
-          // IDと日付を抽出（contentから先に試行、次にデータベースから）
-          let postId = ''
-          let rawDate = ''
-          
-          // まずcontentから抽出を試行
-          const idMatch = post.content.match(/\[ID:([^\]]+)\]/)
-          const dateMatch = post.content.match(/\[(\d{4}\/\d{2}\/\d{2}[^\]]+)\]/)
-          
-          if (idMatch) {
-            postId = idMatch[1]
-          }
-          if (dateMatch) {
-            rawDate = dateMatch[1]
-          }
-          
-          // contentから抽出できない場合、別のパターンで試行
-          if (!postId || !rawDate) {
-            // posted_atから日付を取得
-            if (!rawDate && post.posted_at) {
-              const date = new Date(post.posted_at)
-              rawDate = date.toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: '2-digit', 
-                day: '2-digit',
-                weekday: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-              }).replace(/\//g, '/').replace(/,/g, '').replace(/\s+/g, ' ')
-            }
-            
-            // IDがない場合はpost_numberベースで生成
-            if (!postId) {
-              postId = `post${post.post_number}${Math.random().toString(36).substr(2, 6)}`
-            }
-          }
-          
-          // URLをリンクに変換するヘルパー関数
-          const convertUrlsToLinks = (text: string) => {
-            const urlRegex = /(https?:\/\/[^\s<>\"']+)/gi
-            return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
-          }
-
-          // メタ情報の除去された本文
-          let cleanContent = post.content
-            .replace(/\s*\[ID:[^\]]+\]\s*/g, '') // IDを削除
-            .replace(/\s*\[\d{4}\/\d{2}\/\d{2}[^\]]*\]\s*/g, '') // 日付を削除
-            .replace(/^>/gm, '') // 行頭の>を削除
-            .replace(/^>>/gm, '') // 行頭の>>を削除
-            .replace(/^&gt;/gm, '') // HTML entity行頭の>を削除
-            .replace(/^&gt;&gt;/gm, '') // HTML entity行頭の>>を削除
-            .replace(/\n/g, '<br>')
-          
-          // URLをリンクに変換
-          cleanContent = convertUrlsToLinks(cleanContent)
-          
-          // 画像URLを画像タグに変換
-          cleanContent = processPostImages(cleanContent)
-          
-          let postHtml = `<div class="post-item" data-post-number="${post.post_number}">`
-          
-          // メタ情報を一行にまとめる
-          let metaInfo = `${post.post_number}：${post.author}`
-          if (postId) metaInfo += ` ID:${postId}`
-          if (rawDate) metaInfo += ` ${rawDate}`
-          
-          postHtml += `<div class="post-meta">${metaInfo}</div>`
-          
-          let contentStyle = ''
-          if (style.color && style.color !== 'black') {
-            contentStyle += `color: ${style.color}; `
-          }
-          if (style.fontSize === 'large') {
-            contentStyle += 'font-size: 1.2em; '
-          } else if (style.fontSize === 'small') {
-            contentStyle += 'font-size: 0.9em; '
-          }
-          if (style.fontWeight === 'bold') {
-            contentStyle += 'font-weight: bold; '
-          }
-          if (style.fontStyle === 'italic') {
-            contentStyle += 'font-style: italic; '
-          }
-
-          postHtml += `<div class="post-content"${contentStyle ? ` style="${contentStyle}"` : ''}>`
-          postHtml += cleanContent
-          postHtml += '</div>'
-          postHtml += '</div>'
-          
-          return postHtml
-        }).join('\n\n')
-
-        setFormData(prev => ({
-          ...prev,
-          content: content
-        }))
-      }
-    } catch (error) {
-      toast.error('スレッドデータの取得に失敗しました')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   // フォーム送信
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -201,27 +89,24 @@ export default function NewArticlePage() {
     try {
       setIsSaving(true)
       
-      const response = await fetch('/api/articles', {
-        method: 'POST',
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          thread_id: threadId || null
-        })
+        body: JSON.stringify(formData)
       })
 
       const data = await response.json()
       
       if (response.ok) {
-        toast.success('記事を作成しました')
+        toast.success('記事を更新しました')
         router.push('/admin/articles')
       } else {
-        toast.error(data.error || '記事作成に失敗しました')
+        toast.error(data.error || '記事更新に失敗しました')
       }
     } catch (error) {
-      toast.error('記事作成に失敗しました')
+      toast.error('記事更新に失敗しました')
     } finally {
       setIsSaving(false)
     }
@@ -247,8 +132,8 @@ export default function NewArticlePage() {
 
   useEffect(() => {
     fetchCategories()
-    fetchThreadData()
-  }, [threadId])
+    fetchArticle()
+  }, [articleId])
 
   if (isLoading) {
     return (
@@ -260,14 +145,24 @@ export default function NewArticlePage() {
     )
   }
 
+  if (!article) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-8">
+          <p className="text-gray-600">記事が見つかりません</p>
+        </div>
+      </AdminLayout>
+    )
+  }
+
   return (
     <AdminLayout>
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">新しい記事</h1>
+            <h1 className="text-2xl font-bold text-gray-900">記事編集</h1>
             <p className="mt-2 text-gray-600">
-              {thread ? `「${thread.title}」から記事を作成` : 'ブログ記事を作成します'}
+              「{article.title}」を編集しています
             </p>
           </div>
           <div className="flex space-x-3">
@@ -373,7 +268,7 @@ export default function NewArticlePage() {
                   className="btn-primary flex items-center flex-1 justify-center"
                 >
                   <CheckIcon className="h-4 w-4 mr-2" />
-                  {isSaving ? '保存中...' : '保存'}
+                  {isSaving ? '保存中...' : '更新'}
                 </button>
                 <button
                   type="button"
@@ -438,27 +333,6 @@ export default function NewArticlePage() {
                 </div>
               </div>
             </div>
-
-            {/* 元スレッド情報 */}
-            {thread && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">元スレッド</h3>
-                <div className="space-y-2 text-sm">
-                  <p><strong>タイトル:</strong> {thread.title}</p>
-                  <p><strong>板:</strong> {thread.board}</p>
-                  <p><strong>レス数:</strong> {thread.post_count}</p>
-                  <p><strong>選択レス:</strong> {selectedPosts.length}件</p>
-                  <a
-                    href={thread.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    元スレを表示 →
-                  </a>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </form>

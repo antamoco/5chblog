@@ -4,7 +4,7 @@ import { AdminLayout } from '@/components/AdminLayout'
 import { useState, useEffect } from 'react'
 import { 
   DocumentTextIcon, 
-  CollectionIcon, 
+  RectangleStackIcon, 
   EyeIcon, 
   ChatBubbleLeftEllipsisIcon 
 } from '@heroicons/react/24/outline'
@@ -27,15 +27,39 @@ export default function AdminDashboard() {
   })
 
   useEffect(() => {
-    // TODO: APIからデータを取得
-    // 仮のデータ
-    setStats({
-      totalArticles: 12,
-      publishedArticles: 8,
-      totalThreads: 45,
-      totalViews: 1234,
-      totalComments: 89,
-    })
+    // 実際のデータを取得
+    const fetchStats = async () => {
+      try {
+        // 記事統計を取得
+        const articlesResponse = await fetch('/api/articles')
+        if (articlesResponse.ok) {
+          const articlesData = await articlesResponse.json()
+          const articles = articlesData.articles || []
+          
+          setStats(prev => ({
+            ...prev,
+            totalArticles: articles.length,
+            publishedArticles: articles.filter((a: any) => a.status === 'published').length,
+          }))
+        }
+
+        // スレッド統計を取得
+        const threadsResponse = await fetch('/api/threads/collect')
+        if (threadsResponse.ok) {
+          const threadsData = await threadsResponse.json()
+          const threads = threadsData.collected_threads || []
+          
+          setStats(prev => ({
+            ...prev,
+            totalThreads: threads.length,
+          }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error)
+      }
+    }
+
+    fetchStats()
   }, [])
 
   const statCards = [
@@ -54,20 +78,8 @@ export default function AdminDashboard() {
     {
       name: '収集スレッド数',
       value: stats.totalThreads,
-      icon: CollectionIcon,
+      icon: RectangleStackIcon,
       color: 'bg-purple-500',
-    },
-    {
-      name: '総ビュー数',
-      value: stats.totalViews,
-      icon: EyeIcon,
-      color: 'bg-yellow-500',
-    },
-    {
-      name: '総コメント数',
-      value: stats.totalComments,
-      icon: ChatBubbleLeftEllipsisIcon,
-      color: 'bg-pink-500',
     },
   ]
 
@@ -81,7 +93,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* 統計カード */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {statCards.map((card) => (
           <div key={card.name} className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
@@ -110,7 +122,7 @@ export default function AdminDashboard() {
               href="/admin/threads"
               className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <CollectionIcon className="h-5 w-5 text-gray-400 mr-3" />
+              <RectangleStackIcon className="h-5 w-5 text-gray-400 mr-3" />
               <span className="text-sm font-medium">スレッドを収集</span>
             </a>
             <a
@@ -125,20 +137,12 @@ export default function AdminDashboard() {
 
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            最近のアクティビティ
+            システム状態
           </h2>
           <div className="space-y-3">
             <div className="flex items-center text-sm">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
               <span className="text-gray-600">システムが正常に動作しています</span>
-            </div>
-            <div className="flex items-center text-sm">
-              <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-              <span className="text-gray-600">最後のスレッド収集: 2時間前</span>
-            </div>
-            <div className="flex items-center text-sm">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
-              <span className="text-gray-600">新しいコメント: 3件</span>
             </div>
           </div>
         </div>

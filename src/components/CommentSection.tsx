@@ -27,26 +27,11 @@ export function CommentSection({ articleId }: CommentSectionProps) {
   const fetchComments = async () => {
     try {
       setIsLoading(true)
-      // TODO: APIからコメント取得
-      // 仮のデータ
-      setComments([
-        {
-          id: '1',
-          article_id: articleId,
-          author_name: '名無しさん',
-          content: 'とても興味深い記事でした！',
-          status: 'approved',
-          created_at: new Date(Date.now() - 3600000).toISOString(), // 1時間前
-        },
-        {
-          id: '2',
-          article_id: articleId,
-          author_name: '通りすがり',
-          content: 'スレの選択が上手ですね。読みやすかったです。',
-          status: 'approved',
-          created_at: new Date(Date.now() - 7200000).toISOString(), // 2時間前
-        },
-      ])
+      const response = await fetch(`/api/articles/${articleId}/comments`)
+      if (response.ok) {
+        const data = await response.json()
+        setComments(data.comments || [])
+      }
     } catch (error) {
       console.error('Failed to fetch comments:', error)
     } finally {
@@ -66,28 +51,26 @@ export function CommentSection({ articleId }: CommentSectionProps) {
     try {
       setIsSubmitting(true)
       
-      // TODO: APIにコメント投稿
-      // 仮の処理
-      const comment: Comment = {
-        id: Date.now().toString(),
-        article_id: articleId,
-        author_name: newComment.author_name,
-        author_email: newComment.author_email,
-        content: newComment.content,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      }
-
-      // 仮でローカルに追加（実際はAPIから最新データを取得）
-      setComments(prev => [comment, ...prev])
-      
-      setNewComment({
-        author_name: '',
-        author_email: '',
-        content: ''
+      const response = await fetch(`/api/articles/${articleId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newComment)
       })
 
-      toast.success('コメントを投稿しました。承認後に表示されます。')
+      if (response.ok) {
+        setNewComment({
+          author_name: '',
+          author_email: '',
+          content: ''
+        })
+        await fetchComments() // 最新のコメント一覧を再取得
+        toast.success('コメントを投稿しました。承認後に表示されます。')
+      } else {
+        const data = await response.json()
+        toast.error(data.error || 'コメント投稿に失敗しました')
+      }
     } catch (error) {
       toast.error('コメント投稿に失敗しました')
     } finally {

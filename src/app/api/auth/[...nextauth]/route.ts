@@ -18,7 +18,7 @@ const handler = NextAuth({
           return {
             id: '1',
             name: 'Admin',
-            email: credentials.email,
+            email: credentials?.email || '',
             role: 'admin'
           }
         }
@@ -29,14 +29,14 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
+        token.role = (user as any).role
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub
-        session.user.role = token.role
+      if (token && token.sub) {
+        (session.user as any).id = token.sub;
+        (session.user as any).role = token.role
       }
       return session
     }

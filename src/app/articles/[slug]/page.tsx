@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { CommentSection } from '@/components/CommentSection'
 import { RelatedArticles } from '@/components/RelatedArticles'
+import { processPostImages } from '@/lib/image-utils'
 
 interface ArticlePageProps {
   params: {
@@ -78,12 +79,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   const formatContent = (content: string) => {
-    // レス形式のHTMLを適切にフォーマット
+    // レス形式のHTMLを適切にフォーマット（ハムスター速報スタイル）
     return content
-      .replace(/data-post-number="(\d+)"/g, 'data-post-number="$1"')
-      .replace(/<div class="post-item"/g, '<div class="post-item mb-4 p-4 bg-gray-50 border-l-4 border-blue-500"')
-      .replace(/<div class="post-meta">/g, '<div class="post-meta text-sm text-gray-600 font-medium mb-2">')
-      .replace(/<div class="post-content"/g, '<div class="post-content text-gray-800">')
+      // アンカーは保持（>>1 などの形式）
+      .replace(/&gt;&gt;(\d+)/g, '>>$1')
+      // post-content内の先頭の>記号を削除
+      .replace(/(<div class="post-content">)&gt;([^<])/g, '$1$2')
+      // post-content内に&gt;で始まる文字列があれば削除
+      .replace(/(<div class="post-content">)&gt;/g, '$1')
+      // その他のHTML entity変換
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<')
+      .replace(/&amp;/g, '&')
   }
 
   return (
@@ -141,25 +148,75 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
           {/* 記事本文 */}
           <div className="p-8">
-            {article.excerpt && (
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
-                <p className="text-blue-800 font-medium">{article.excerpt}</p>
-              </div>
-            )}
 
-            <div 
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ 
-                __html: formatContent(article.content) 
-              }}
-            />
+            <div className="prose prose-lg max-w-none">
+              {article.content.split('<div class="post-item"').filter(part => part.trim()).map((part, index) => {
+                if (index === 0 && !part.includes('data-post-number')) return null
+                
+                const postHtml = index > 0 ? '<div class="post-item"' + part : part
+                
+                // HTMLから情報を抽出
+                const postNumberMatch = postHtml.match(/data-post-number="(\d+)"/)
+                const metaMatch = postHtml.match(/<div class="post-meta">([^<]+)<\/div>/)
+                const contentMatch = postHtml.match(/<div class="post-content"([^>]*)>((?:(?!<\/div>).)*)<\/div>/s)
+                
+                if (!metaMatch || !contentMatch) return null
+                
+                const postNumber = postNumberMatch ? postNumberMatch[1] : index
+                const metaInfo = metaMatch[1]
+                const styleAttr = contentMatch[1] || ''
+                let content = contentMatch[2]
+                
+                // URLをリンクに変換
+                const urlRegex = /(https?:\/\/[^\s<>\"']+)/gi
+                content = content.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
+                
+                // 画像URLを画像タグに変換
+                content = processPostImages(content)
+                
+                // インラインスタイルを解析
+                const style: React.CSSProperties = {}
+                if (styleAttr.includes('style=')) {
+                  const styleMatch = styleAttr.match(/style="([^"]*)"/)
+                  if (styleMatch && styleMatch[1]) {
+                    styleMatch[1].split(';').forEach(rule => {
+                      const [prop, val] = rule.split(':').map(s => s.trim())
+                      if (prop && val) {
+                        const camelProp = prop.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
+                        // React CSSPropertiesに適合するよう型変換
+                        if (camelProp === 'fontSize') {
+                          style.fontSize = val
+                        } else if (camelProp === 'fontWeight') {
+                          style.fontWeight = val as React.CSSProperties['fontWeight']
+                        } else if (camelProp === 'fontStyle') {
+                          style.fontStyle = val as React.CSSProperties['fontStyle']
+                        } else if (camelProp === 'color') {
+                          style.color = val
+                        }
+                      }
+                    })
+                  }
+                }
+                
+                return (
+                  <div key={postNumber} className="post-item">
+                    <div className="post-meta">{metaInfo}</div>
+                    <div 
+                      className="post-content" 
+                      style={style}
+                      dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                  </div>
+                )
+              }).filter(Boolean)}
+            </div>
 
             {/* キーワード */}
             {article.keywords && article.keywords.length > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-sm font-medium text-gray-500 mb-3">タグ</h3>
                 <div className="flex flex-wrap gap-2">
-                  {article.keywords.map((keyword) => (
+                  {article.keywords.map((keyword: string) => (
                     <span
                       key={keyword}
                       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"

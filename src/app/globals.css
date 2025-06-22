@@ -44,4 +44,50 @@
   .admin-content {
     @apply ml-64 min-h-screen bg-gray-50;
   }
+  
+  /* 記事のレス表示スタイル（ハムスター速報風） */
+  .post-item {
+    @apply mb-8;
+  }
+  
+  .post-meta {
+    @apply text-sm text-gray-600 mb-3 font-medium;
+  }
+  
+  .post-content {
+    @apply text-gray-800 leading-relaxed;
+    line-height: 1.6;
+  }
+  
+  /* 画像表示用スタイル */
+  .image-container {
+    @apply my-4 text-center;
+  }
+  
+  .image-container img {
+    @apply max-w-full h-auto rounded-lg shadow-md mx-auto cursor-pointer transition-all duration-200;
+  }
+  
+  .image-container img:hover {
+    @apply shadow-lg;
+  }
+  
+  /* 画像読み込みエラー表示 */
+  .image-error {
+    @apply flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg p-4 text-gray-500;
+    min-height: 120px;
+  }
+  
+  /* モーダル用スタイル */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4;
+  }
+  
+  .modal-content {
+    @apply relative max-w-full max-h-full;
+  }
+  
+  .modal-close {
+    @apply absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-all;
+  }
 }

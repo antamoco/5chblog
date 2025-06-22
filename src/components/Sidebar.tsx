@@ -9,43 +9,34 @@ export function Sidebar() {
   const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
-    // TODO: APIから人気記事とカテゴリを取得
-    // 仮のデータ
-    setPopularArticles([
-      {
-        id: '1',
-        title: '今日の人気記事',
-        slug: 'popular-1',
-        content: '',
-        excerpt: '',
-        category_id: '1',
-        status: 'published',
-        created_at: '',
-        updated_at: '',
-        view_count: 500,
-        comment_count: 25,
-      },
-      {
-        id: '2',
-        title: '話題のスレッドまとめ',
-        slug: 'popular-2',
-        content: '',
-        excerpt: '',
-        category_id: '2',
-        status: 'published',
-        created_at: '',
-        updated_at: '',
-        view_count: 300,
-        comment_count: 15,
-      },
-    ])
+    // 人気記事を取得
+    const fetchPopularArticles = async () => {
+      try {
+        const response = await fetch('/api/articles?limit=5')
+        if (response.ok) {
+          const data = await response.json()
+          setPopularArticles(data.articles || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch popular articles:', error)
+      }
+    }
 
-    setCategories([
-      { id: '1', name: 'ニュース', slug: 'news', order_index: 1, created_at: '' },
-      { id: '2', name: '雑談', slug: 'chat', order_index: 2, created_at: '' },
-      { id: '3', name: 'ゲーム', slug: 'game', order_index: 3, created_at: '' },
-      { id: '4', name: 'アニメ・漫画', slug: 'anime', order_index: 4, created_at: '' },
-    ])
+    // カテゴリを取得
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories')
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data.categories || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+      }
+    }
+
+    fetchPopularArticles()
+    fetchCategories()
   }, [])
 
   return (

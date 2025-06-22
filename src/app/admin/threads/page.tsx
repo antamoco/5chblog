@@ -4,7 +4,7 @@ import { AdminLayout } from '@/components/AdminLayout'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { 
-  CollectionIcon, 
+  RectangleStackIcon, 
   EyeIcon, 
   CalendarIcon,
   ChatBubbleLeftIcon
@@ -38,14 +38,22 @@ export default function ThreadsPage() {
 
   // スレッド収集を実行
   const collectThreads = async () => {
+    console.log('=== Collect Threads Button Clicked ===')
     try {
       setIsCollecting(true)
       toast.loading('スレッドを収集中...')
       
+      console.log('Sending POST request to /api/threads/collect')
       const response = await fetch('/api/threads/collect', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
+      
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('Response data:', data)
       
       toast.dismiss()
       
@@ -53,9 +61,11 @@ export default function ThreadsPage() {
         toast.success(data.message)
         await fetchThreads() // 一覧を再取得
       } else {
+        console.error('API Error:', data.error)
         toast.error(data.error || 'スレッド収集に失敗しました')
       }
     } catch (error) {
+      console.error('Network Error:', error)
       toast.dismiss()
       toast.error('スレッド収集に失敗しました')
     } finally {
@@ -100,7 +110,7 @@ export default function ThreadsPage() {
             disabled={isCollecting}
             className="btn-primary flex items-center"
           >
-            <CollectionIcon className="h-5 w-5 mr-2" />
+            <RectangleStackIcon className="h-5 w-5 mr-2" />
             {isCollecting ? '収集中...' : 'スレッド収集'}
           </button>
         </div>
@@ -157,7 +167,7 @@ export default function ThreadsPage() {
           </div>
         ) : threads.length === 0 ? (
           <div className="p-8 text-center">
-            <CollectionIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <RectangleStackIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">まだスレッドが収集されていません</p>
             <button
               onClick={collectThreads}

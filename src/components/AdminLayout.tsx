@@ -9,10 +9,10 @@ import { usePathname } from 'next/navigation'
 import {
   HomeIcon,
   DocumentTextIcon,
-  CollectionIcon,
+  RectangleStackIcon,
   CogIcon,
   UserIcon,
-  LogoutIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
 interface AdminLayoutProps {
@@ -21,7 +21,7 @@ interface AdminLayoutProps {
 
 const navigation = [
   { name: 'ダッシュボード', href: '/admin', icon: HomeIcon },
-  { name: 'スレッド収集', href: '/admin/threads', icon: CollectionIcon },
+  { name: 'スレッド収集', href: '/admin/threads', icon: RectangleStackIcon },
   { name: '記事管理', href: '/admin/articles', icon: DocumentTextIcon },
   { name: '設定', href: '/admin/settings', icon: CogIcon },
 ]
@@ -99,7 +99,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   onClick={() => signOut()}
                   className="text-xs text-gray-400 hover:text-white flex items-center"
                 >
-                  <LogoutIcon className="h-4 w-4 mr-1" />
+                  <ArrowRightOnRectangleIcon className="h-4 w-4 mr-1" />
                   ログアウト
                 </button>
               </div>

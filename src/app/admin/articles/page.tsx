@@ -49,6 +49,30 @@ export default function ArticlesPage() {
     }
   }
 
+  // 記事削除
+  const handleDeleteArticle = async (articleId: string, title: string) => {
+    if (!confirm(`「${title}」を削除しますか？この操作は取り消せません。`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('記事を削除しました')
+        fetchArticles() // 記事一覧を再取得
+      } else {
+        toast.error(data.error || '記事削除に失敗しました')
+      }
+    } catch (error) {
+      toast.error('記事削除に失敗しました')
+    }
+  }
+
   useEffect(() => {
     fetchArticles()
   }, [filter])
@@ -250,10 +274,7 @@ export default function ArticlesPage() {
                       <PencilIcon className="h-4 w-4" />
                     </Link>
                     <button
-                      onClick={() => {
-                        // TODO: 削除機能実装
-                        toast.error('削除機能は未実装です')
-                      }}
+                      onClick={() => handleDeleteArticle(article.id, article.title)}
                       className="text-red-600 hover:text-red-800"
                     >
                       <TrashIcon className="h-4 w-4" />

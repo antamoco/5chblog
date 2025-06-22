@@ -22,6 +22,9 @@ export interface Post {
   is_selected: boolean
   display_order?: number
   style_config?: PostStyleConfig
+  // スクレイピング用の一時的フィールド（DBには保存されない）
+  post_id?: string
+  raw_date?: string
 }
 
 export interface PostStyleConfig {

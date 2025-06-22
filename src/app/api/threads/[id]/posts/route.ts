@@ -49,12 +49,12 @@ export async function GET(
       })
     }
 
-    // データベースに保存
+    // データベースに保存（既存スキーマのフィールドのみ使用）
     const postsToInsert = scrapedPosts.map(post => ({
       thread_id: threadId,
       post_number: post.post_number,
       author: post.author,
-      content: post.content,
+      content: post.content + (post.post_id ? ` [ID:${post.post_id}]` : '') + (post.raw_date ? ` [${post.raw_date}]` : ''), // IDと日付を本文に含める
       posted_at: post.posted_at,
       is_selected: false,
     }))

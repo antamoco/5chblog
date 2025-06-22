@@ -3,8 +3,23 @@ import { ArticleCard } from '@/components/ArticleCard'
 import { CategoryNav } from '@/components/CategoryNav'
 import { SearchBar } from '@/components/SearchBar'
 import { Sidebar } from '@/components/Sidebar'
+import { supabaseAdmin } from '@/lib/supabase'
 
-export default function HomePage() {
+export default async function HomePage() {
+  // 公開記事を取得
+  const { data: articles } = await supabaseAdmin
+    .from('articles')
+    .select(`
+      *,
+      categories:category_id (
+        id,
+        name,
+        slug
+      )
+    `)
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(10)
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
@@ -32,36 +47,31 @@ export default function HomePage() {
             <div className="space-y-6">
               <h1 className="text-3xl font-bold text-gray-900">最新記事</h1>
               
-              {/* サンプル記事 */}
-              <ArticleCard
-                title="【悲報】今日も仕事が終わらない件について"
-                excerpt="働き方改革とは何だったのか..."
-                category="雑談"
-                publishedAt="2024-01-15"
-                slug="sample-article-1"
-                commentCount={42}
-              />
-              
-              <ArticleCard
-                title="【朗報】新しいゲームが面白すぎる"
-                excerpt="久々に当たりを引いたかもしれない"
-                category="ゲーム"
-                publishedAt="2024-01-14"
-                slug="sample-article-2"
-                commentCount={128}
-              />
-              
-              <div className="text-center py-8">
-                <p className="text-gray-500">
-                  まだ記事がありません。管理画面から記事を作成してください。
-                </p>
-                <Link 
-                  href="/admin" 
-                  className="mt-4 inline-block btn-primary"
-                >
-                  管理画面へ
-                </Link>
-              </div>
+              {articles && articles.length > 0 ? (
+                articles.map((article: any) => (
+                  <ArticleCard
+                    key={article.id}
+                    title={article.title}
+                    excerpt={article.excerpt}
+                    category={article.categories?.name || 'カテゴリなし'}
+                    publishedAt={article.published_at}
+                    slug={article.slug}
+                    commentCount={article.comment_count || 0}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    まだ記事がありません。管理画面から記事を作成してください。
+                  </p>
+                  <Link 
+                    href="/admin" 
+                    className="mt-4 inline-block btn-primary"
+                  >
+                    管理画面へ
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -78,8 +88,10 @@ export default function HomePage() {
           <div className="text-center text-gray-500">
             <p>&copy; 2024 5ch.sc まとめブログ. All rights reserved.</p>
             <div className="mt-4 space-x-4">
-              <Link href="/rss" className="hover:text-gray-700">RSS</Link>
+              <Link href="/privacy-policy" className="hover:text-gray-700">プライバシーポリシー</Link>
+              <Link href="/terms" className="hover:text-gray-700">利用規約</Link>
               <Link href="/contact" className="hover:text-gray-700">お問い合わせ</Link>
+              <Link href="/rss" className="hover:text-gray-700">RSS</Link>
             </div>
           </div>
         </div>

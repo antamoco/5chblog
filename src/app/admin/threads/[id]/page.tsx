@@ -250,7 +250,7 @@ export default function ThreadDetailPage() {
                                 {...provided.dragHandleProps}
                                 className="mb-2 p-3 bg-gray-50 rounded border text-sm"
                               >
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-center mb-2">
                                   <span className="font-medium">{post.post_number}番</span>
                                   <button
                                     onClick={(e) => {
@@ -262,9 +262,33 @@ export default function ThreadDetailPage() {
                                     削除
                                   </button>
                                 </div>
-                                <p className="mt-1 text-gray-600 line-clamp-2">
+                                <p className="mt-1 text-gray-600 line-clamp-2 mb-2">
                                   {post.content}
                                 </p>
+                                <div className="flex space-x-2 text-xs">
+                                  <select
+                                    value={postStyles[postId]?.color || 'black'}
+                                    onChange={(e) => updatePostStyle(postId, 'color', e.target.value)}
+                                    className="px-2 py-1 border rounded text-xs"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <option value="black">黒</option>
+                                    <option value="red">赤</option>
+                                    <option value="blue">青</option>
+                                    <option value="green">緑</option>
+                                    <option value="purple">紫</option>
+                                  </select>
+                                  <select
+                                    value={postStyles[postId]?.fontSize || 'medium'}
+                                    onChange={(e) => updatePostStyle(postId, 'fontSize', e.target.value)}
+                                    className="px-2 py-1 border rounded text-xs"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <option value="small">小</option>
+                                    <option value="medium">標準</option>
+                                    <option value="large">大</option>
+                                  </select>
+                                </div>
                               </div>
                             )}
                           </Draggable>
@@ -278,19 +302,19 @@ export default function ThreadDetailPage() {
             </div>
           </div>
 
-          {/* スタイル設定 */}
-          {selectedPosts.length > 0 && (
+          {/* スタイル設定 - 一括設定 */}
+          {selectedPosts.length > 1 && (
             <div className="bg-white rounded-lg shadow">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold flex items-center">
                   <PaintBrushIcon className="h-5 w-5 mr-2" />
-                  スタイル設定
+                  一括スタイル設定
                 </h2>
               </div>
               <div className="p-4 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    文字色
+                    選択中のレス全体の文字色
                   </label>
                   <select
                     onChange={(e) => {
@@ -300,6 +324,7 @@ export default function ThreadDetailPage() {
                     }}
                     className="input-field"
                   >
+                    <option value="">選択してください</option>
                     <option value="black">黒</option>
                     <option value="red">赤</option>
                     <option value="blue">青</option>
@@ -309,7 +334,7 @@ export default function ThreadDetailPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    フォントサイズ
+                    選択中のレス全体のフォントサイズ
                   </label>
                   <select
                     onChange={(e) => {
@@ -319,8 +344,9 @@ export default function ThreadDetailPage() {
                     }}
                     className="input-field"
                   >
-                    <option value="medium">標準</option>
+                    <option value="">選択してください</option>
                     <option value="small">小</option>
+                    <option value="medium">標準</option>
                     <option value="large">大</option>
                   </select>
                 </div>
