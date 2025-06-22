@@ -1,6 +1,4 @@
-import axios from 'axios'
 import * as cheerio from 'cheerio'
-import * as iconv from 'iconv-lite'
 import { Thread, Post } from '@/types'
 
 interface ScrapingConfig {
@@ -55,15 +53,17 @@ export class FiveChScraper {
         try {
           console.log(`Trying board list source: ${sourceUrl}`)
           
-          const response = await axios.get(sourceUrl, {
-            timeout: 10000,
+          const response = await fetch(sourceUrl, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            },
-            responseType: 'arraybuffer'
+            }
           })
 
-          const html = iconv.decode(Buffer.from(response.data), 'shift_jis')
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`)
+          }
+
+          const html = await response.text()
           const $ = cheerio.load(html)
 
           // 板一覧からURLを抽出

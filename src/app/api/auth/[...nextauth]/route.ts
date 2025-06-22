@@ -1,55 +1,70 @@
-import NextAuth from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
+import { NextRequest, NextResponse } from 'next/server'
+import { SignJWT, jwtVerify } from 'jose'
 
-// Note: NextAuth has compatibility issues with Edge Runtime, keeping it on Node.js runtime
+export const runtime = 'edge'
 
-const handler = NextAuth({
-  providers: [
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        // 環境変数による簡易認証
-        if (
-          credentials?.email === process.env.ADMIN_EMAIL &&
-          credentials?.password === process.env.ADMIN_PASSWORD
-        ) {
-          return {
-            id: '1',
-            name: 'Admin',
-            email: credentials?.email || '',
-            role: 'admin'
-          }
-        }
-        return null
-      }
-    })
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as any).role
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token && token.sub) {
-        (session.user as any).id = token.sub;
-        (session.user as any).role = token.role
-      }
-      return session
+const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret')
+
+async function createToken(payload: any) {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(secret)
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { email, password, csrfToken } = await request.json()
+
+    // CSRF protection
+    if (csrfToken !== 'admin-login') {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 })
     }
-  },
-  pages: {
-    signIn: '/admin/login',
-    error: '/admin/login',
-  },
-  session: {
-    strategy: 'jwt',
-  },
-})
 
-export { handler as GET, handler as POST }
+    // 環境変数による簡易認証
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+      const token = await createToken({
+        sub: '1',
+        email,
+        role: 'admin',
+        name: 'Admin'
+      })
+
+      const response = NextResponse.json({ 
+        user: { id: '1', name: 'Admin', email, role: 'admin' },
+        message: 'Logged in successfully'
+      })
+
+      // HTTPOnly Cookie設定
+      response.cookies.set('auth-token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 // 7 days
+      })
+
+      return response
+    }
+
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+  } catch (error) {
+    return NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // CSRF Token endpoint
+    return NextResponse.json({ csrfToken: 'admin-login' })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to get CSRF token' }, { status: 500 })
+  }
+}
+
+// Logout endpoint
+export async function DELETE() {
+  const response = NextResponse.json({ message: 'Logged out successfully' })
+  response.cookies.delete('auth-token')
+  return response
+}

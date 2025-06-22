@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
-// Note: Uses NextAuth.js getServerSession, keeping it on Node.js runtime
+export const runtime = 'edge'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session) {
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-    }
+    await requireAuth(request)
 
     const { data, error } = await supabaseAdmin
       .from('site_settings')
@@ -45,10 +42,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session) {
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-    }
+    await requireAuth(request)
 
     const settings = await request.json()
 

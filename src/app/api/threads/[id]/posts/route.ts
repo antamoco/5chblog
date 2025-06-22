@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { createDefaultScraper } from '@/lib/fivech-scraper'
 
-// Note: Uses iconv-lite for Shift_JIS encoding, keeping it on Node.js runtime
+export const runtime = 'edge'
 
 export async function GET(
   request: NextRequest,
@@ -34,52 +33,12 @@ export async function GET(
       return NextResponse.json({ error: 'スレッドが見つかりません' }, { status: 404 })
     }
 
-    // 認証チェック（スクレイピングには認証が必要）
-    const session = await getServerSession()
-    if (!session) {
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-    }
-
-    // スレッドからレスを取得
-    const scraper = createDefaultScraper()
-    const scrapedPosts = await scraper.scrapeThreadPosts(thread.url)
-
-    if (scrapedPosts.length === 0) {
-      return NextResponse.json({ 
-        message: 'レスを取得できませんでした',
-        posts: []
-      })
-    }
-
-    // データベースに保存（既存スキーマのフィールドのみ使用）
-    const postsToInsert = scrapedPosts.map(post => ({
-      thread_id: threadId,
-      post_number: post.post_number,
-      author: post.author,
-      content: post.content + (post.post_id ? ` [ID:${post.post_id}]` : '') + (post.raw_date ? ` [${post.raw_date}]` : ''), // IDと日付を本文に含める
-      posted_at: post.posted_at,
-      is_selected: false,
-    }))
-
-    const { data: insertedPosts, error } = await supabaseAdmin
-      .from('posts')
-      .insert(postsToInsert)
-      .select()
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json({ error: 'データベースエラー' }, { status: 500 })
-    }
-
-    // スレッドのpost_countを更新
-    await supabaseAdmin
-      .from('threads')
-      .update({ post_count: scrapedPosts.length })
-      .eq('id', threadId)
-
+    // TODO: スクレイピング機能は後で実装
+    // 現在はCloudflare Pages対応のため無効化
+    
     return NextResponse.json({ 
-      posts: insertedPosts,
-      message: `${scrapedPosts.length}件のレスを取得しました`
+      posts: [],
+      message: 'スクレイピング機能は準備中です'
     })
 
   } catch (error) {
@@ -95,10 +54,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession()
-    if (!session) {
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-    }
+    await requireAuth(request)
 
     const threadId = params.id
     const body = await request.json()

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
-// Note: Uses NextAuth.js getServerSession, keeping it on Node.js runtime
+export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 公開記事のみ（管理者以外）
-    const session = await getServerSession()
-    if (!session) {
+    const user = await getSession(request)
+    if (!user) {
       query = query.eq('status', 'published')
     }
 
@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session) {
+    const user = await getSession(request)
+    if (!user) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
     }
 
