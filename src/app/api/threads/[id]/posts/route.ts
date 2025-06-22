@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createDefaultScraper } from '@/lib/fivech-scraper'
 
+export const runtime = 'edge'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

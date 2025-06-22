@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase'
+
+export const runtime = 'edge'
 import { 
   CalendarIcon, 
   EyeIcon, 

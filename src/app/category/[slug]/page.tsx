@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase'
+
+export const runtime = 'edge'
 import { ArticleCard } from '@/components/ArticleCard'
 import { CategoryNav } from '@/components/CategoryNav'
 import { SearchBar } from '@/components/SearchBar'

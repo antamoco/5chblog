@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createDefaultScraper, createScraperWithSettings } from '@/lib/fivech-scraper'
 
+export const runtime = 'edge'
+
 export async function POST(request: NextRequest) {
   console.log('=== Thread Collection API Called ===')
   try {

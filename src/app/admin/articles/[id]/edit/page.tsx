@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import { AdminLayout } from '@/components/AdminLayout'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
