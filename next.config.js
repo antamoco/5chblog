@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Cloudflare Pages対応: キャッシュ無効化
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.cache = false
+    }
+    return config
+  },
   images: {
     domains: ['img.5ch.net', 'i.imgur.com', 'pbs.twimg.com'],
     remotePatterns: [
