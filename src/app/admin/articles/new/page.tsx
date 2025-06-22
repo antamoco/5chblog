@@ -1,7 +1,7 @@
 'use client'
 
 import { AdminLayout } from '@/components/AdminLayout'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { 
@@ -13,7 +13,7 @@ import {
 import { Category, Post, Thread } from '@/types'
 import { processPostImages } from '@/lib/image-utils'
 
-export default function NewArticlePage() {
+function NewArticleContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const threadId = searchParams.get('threadId')
@@ -463,5 +463,13 @@ export default function NewArticlePage() {
         </div>
       </form>
     </AdminLayout>
+  )
+}
+
+export default function NewArticlePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewArticleContent />
+    </Suspense>
   )
 }
