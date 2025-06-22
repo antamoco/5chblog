@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createDefaultScraper } from '@/lib/fivech-scraper'
 
-export const runtime = 'edge'
+// Note: Uses iconv-lite for Shift_JIS encoding, keeping it on Node.js runtime
 
 export async function GET(
   request: NextRequest,

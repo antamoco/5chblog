@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
-export const runtime = 'edge'
+// Note: NextAuth has compatibility issues with Edge Runtime, keeping it on Node.js runtime
 
 const handler = NextAuth({
   providers: [

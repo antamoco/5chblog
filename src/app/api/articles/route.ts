@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
-export const runtime = 'edge'
+// Note: Uses NextAuth.js getServerSession, keeping it on Node.js runtime
 
 export async function GET(request: NextRequest) {
   try {
