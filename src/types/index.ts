@@ -20,7 +20,7 @@ export interface Post {
   content: string
   posted_at: string
   is_selected: boolean
-  display_order?: number
+  display_order?: number | null
   style_config?: PostStyleConfig
   // スクレイピング用の一時的フィールド（DBには保存されない）
   post_id?: string
