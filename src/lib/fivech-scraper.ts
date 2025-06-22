@@ -861,7 +861,7 @@ export class FiveChScraper {
       const match = dateText.match(pattern)
       if (match) {
         try {
-          let year, month, day, hour = 0, minute = 0, second = 0
+          let year: string, month: string, day: string, hour: string = '0', minute: string = '0', second: string = '0'
           
           if (pattern.source.includes('\\d{4}')) {
             // 4桁年
@@ -869,7 +869,8 @@ export class FiveChScraper {
           } else {
             // 2桁年
             [, year, month, day, hour, minute, second] = match
-            year = parseInt(year) < 50 ? `20${year}` : `19${year}`
+            const yearNum = parseInt(year)
+            year = yearNum < 50 ? `20${year}` : `19${year}`
           }
           
           const date = new Date(
